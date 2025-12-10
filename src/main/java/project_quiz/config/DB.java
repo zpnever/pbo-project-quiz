@@ -1,4 +1,4 @@
-package project_quiz;
+package project_quiz.config;
 
 import java.sql.Connection;
 import java.sql.DriverManager;

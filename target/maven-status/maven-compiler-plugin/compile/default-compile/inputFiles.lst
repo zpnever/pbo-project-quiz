@@ -1,4 +1,12 @@
-D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\DB.java
+D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\config\DB.java
 D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\Main.java
-D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\User.java
-D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\UserService.java
+D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\models\Guru.java
+D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\models\Jawaban.java
+D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\models\Kuis.java
+D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\models\Nilai.java
+D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\models\Siswa.java
+D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\models\Soal.java
+D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\models\User.java
+D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\repository\UserRepository.java
+D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\repository\UserRepositoryImpl.java
+D:\PROJECT\kuliah\pbo\demo\src\main\java\project_quiz\services\UserService.java

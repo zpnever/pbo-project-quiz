@@ -1,4 +1,12 @@
-project_quiz\User.class
-project_quiz\UserService.class
-project_quiz\DB.class
+project_quiz\models\Kuis.class
 project_quiz\Main.class
+project_quiz\repository\UserRepository.class
+project_quiz\models\Soal.class
+project_quiz\services\UserService.class
+project_quiz\models\Nilai.class
+project_quiz\models\Jawaban.class
+project_quiz\models\Siswa.class
+project_quiz\config\DB.class
+project_quiz\models\Guru.class
+project_quiz\models\User.class
+project_quiz\repository\UserRepositoryImpl.class

@@ -4,8 +4,8 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import project_quiz.DB;
-import project_quiz.User;
+import project_quiz.config.DB;
+import project_quiz.models.User;
 
 public class UserService {
   // --- C R E A T E (I N S E R T) ---
