@@ -14,7 +14,6 @@ public class SoalService {
     this.soalRepository = new SoalRepositoryImpl();
   }
 
-  // Method untuk Guru: Menambahkan soal ke Kuis yang sudah ada
   public Soal addSoalToKuis(String idKuis, String question, int points, String answer, List<String> butirPilihan) {
 
     // Validasi

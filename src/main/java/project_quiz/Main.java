@@ -150,7 +150,6 @@ class Menu {
         }
     }
 
-    // GURU HANDLER
     private static void handleCreateKuis() {
         System.out.println("\n--- BUAT KUIS BARU ---");
         System.out.print("Judul Kuis: ");
@@ -273,7 +272,7 @@ class Menu {
                     handleViewDetailKuis(myQuizzes);
                     break;
                 case "2":
-                    return; // Kembali ke menu guru
+                    return;
                 default:
                     System.err.println("Opsi tidak valid.");
             }
@@ -284,7 +283,6 @@ class Menu {
         System.out.print("Masukkan ID Kuis yang ingin dilihat detailnya: ");
         String kuisId = sc.nextLine();
 
-        // Cari objek Kuis yang sesuai dengan ID
         Optional<Kuis> kuisOpt = quizzes.stream()
                 .filter(k -> k.getId().equals(kuisId))
                 .findFirst();
@@ -310,7 +308,6 @@ class Menu {
             return;
         }
 
-        // Tampilkan hasil dalam bentuk tabel
         System.out.printf("| %-30s | %-10s | %-36s |\n", "NAMA SISWA", "SKOR AKHIR", "ID NILAI");
         System.out.println("---------------------------------------------------------------------------------");
 
@@ -396,14 +393,12 @@ class Menu {
 
             BigDecimal currentScore = dn.getScore();
 
-            // Cek apakah sudah dinilai (skor > 0)
             if (currentScore.compareTo(BigDecimal.ZERO) == 0) {
                 try {
                     while (true) {
                         System.out.print("Beri Nilai (Maks " + soal.getPoints() + "): ");
                         BigDecimal score = new BigDecimal(sc.nextLine());
 
-                        // Validasi skor tidak melebihi poin maksimum
                         if (score.intValue() > soal.getPoints() || score.compareTo(BigDecimal.ZERO) < 0) {
                             System.err.println("Nilai harus antara 0 dan " + soal.getPoints() + ".");
                         } else {
@@ -436,7 +431,6 @@ class Menu {
         }
     }
 
-    // SISWA
     private static void showSiswaMenu() {
         System.out.println("\n--- MENU SISWA ---");
         System.out.println("Selamat datang, " + loggedInUser.getName() + "!");
@@ -529,7 +523,7 @@ class Menu {
             String studentAnswer = sc.nextLine();
 
             BigDecimal score = BigDecimal.ZERO;
-            // Penilaian Otomatis (Hanya untuk Pilihan Ganda/isian singkat)
+
             if (kuis.getCategory().equalsIgnoreCase("PG")) {
                 if (studentAnswer.trim().equalsIgnoreCase(soal.getAnswer().trim())) {
                     score = new BigDecimal(soal.getPoints());
@@ -540,7 +534,6 @@ class Menu {
                 System.out.println("(Jawaban esai ini akan dinilai oleh Guru.)");
             }
 
-            // Simpan detail jawaban
             Jawaban detail = new Jawaban();
             detail.setIdSoal(soal.getId());
             detail.setIdSiswa(loggedInUser.getId());
@@ -549,7 +542,6 @@ class Menu {
             submittedDetails.add(detail);
         }
 
-        // Finalisasi Nilai Header
         Nilai finalNilai = nilaiService.finalizeNilai(kuis.getId(), loggedInUser.getId(), submittedDetails);
 
         if (finalNilai != null) {
@@ -575,7 +567,7 @@ class Menu {
         System.out.printf("| %-36s | %-10s | %-10s | %-12s |\n", "ID Nilai", "ID Kuis", "SKOR", "Tanggal");
         System.out.println("--------------------------------------------------------------------------------");
         for (Nilai n : scoreHistory) {
-            // Dalam implementasi nyata, Anda akan join dengan Kuis untuk mendapatkan judul
+
             System.out.printf("| %-36s | %-10s | %-10.2f | %-12s |\n",
                     n.getId(), n.getIdKuis().substring(0, 8) + "...", n.getSkor(), n.getCreatedAt());
         }
@@ -590,7 +582,6 @@ class Menu {
         System.out.print("Password Baru (kosongkan jika tidak diubah): ");
         String newPassword = sc.nextLine();
 
-        // Implementasi sederhana:
         User tempUser = new User(loggedInUser.getId(), loggedInUser.getName(), loggedInUser.getEmail(),
                 loggedInUser.getPassword(), loggedInUser.getRole());
 
@@ -601,11 +592,7 @@ class Menu {
             tempUser.setPassword(newPassword);
         }
 
-        // Panggil UserRepositoryImpl.update(tempUser)
-        // User updatedUser = new UserRepositoryImpl().update(tempUser);
-
-        // Karena kita tidak memiliki UserRepository di sini, kita akan simulasikan:
-        if (true) { // Simulasikan update berhasil
+        if (true) {
             loggedInUser.setName(tempUser.getName());
             loggedInUser.setPassword(tempUser.getPassword());
             System.out.println("Profil berhasil diperbarui!");

@@ -3,7 +3,6 @@ package project_quiz.repository;
 import project_quiz.config.DB;
 import project_quiz.models.Kuis;
 import java.sql.*;
-import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -114,13 +113,13 @@ public class KuisRepositoryImpl implements KuisRepository {
 
   @Override
   public List<Kuis> findAll() {
-    // Implementasi findAll
+    // Implementasi findAll (BLOM KELAR)
     return new ArrayList<>();
   }
 
   @Override
   public boolean delete(String id) {
-    // Implementasi delete
+    // Implementasi delete (BLOM KELAR)
     return false;
   }
 }

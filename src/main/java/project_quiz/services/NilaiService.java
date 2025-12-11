@@ -21,8 +21,8 @@ public class NilaiService {
   private final NilaiRepository nilaiRepository;
   private final JawabanRepository jawabanRepository;
   private final UserRepository userRepository;
-  private final KuisService kuisService; // Diperlukan untuk mendapatkan detail Kuis
-  private final SoalService soalService; // Diperlukan untuk mendapatkan detail Soal
+  private final KuisService kuisService;
+  private final SoalService soalService;
 
   public NilaiService() {
     this.userRepository = new UserRepositoryImpl();
@@ -31,8 +31,6 @@ public class NilaiService {
     this.kuisService = new KuisService();
     this.soalService = new SoalService();
   }
-
-  // --- Fungsionalitas Siswa ---
 
   public boolean hasStudentCompletedQuiz(String kuisId, String siswaId) {
     return nilaiRepository.findByKuisIdAndSiswaId(kuisId, siswaId).isPresent();
@@ -66,20 +64,12 @@ public class NilaiService {
     return null;
   }
 
-  // --- Fungsionalitas Guru ---
-
-  // Mendapatkan daftar jawaban esai yang perlu dinilai untuk kuis tertentu
-  // public List<Jawaban> getUnratedEssaysByKuisId(String kuisId) {
-  // return
-  // jawabanRepository.findUnratedEssaysByKuisId(kuisId);
-  // }
-
   public List<User> getStudentsWithUnratedEssays(String kuisId) {
     List<String> siswaIds = jawabanRepository.findUniqueSiswaIdWithUnratedEssays(kuisId);
     List<User> students = new ArrayList<>();
 
     for (String siswaId : siswaIds) {
-      // Asumsi UserRepository memiliki findById
+
       userRepository.findById(siswaId).ifPresent(students::add);
     }
     return students;
@@ -88,31 +78,22 @@ public class NilaiService {
   public List<Jawaban> getStudentEssayDetails(String siswaId, String kuisId) {
     System.out.println("[DEBUG SERVICE] Mencari esai untuk Siswa ID: " + siswaId + " Kuis ID: " + kuisId);
 
-    // Ganti list kosong dengan panggilan ke Repository
     return jawabanRepository.findEssayDetailsBySiswaAndKuis(siswaId, kuisId);
   }
 
-  // Menilai satu jawaban esai
   public boolean rateEssay(String jawabanId, BigDecimal scoreGiven) {
-    // 1. Ambil detail nilai yang akan dinilai (asumsi ada method findById di
-    // detailNilaiRepository)
+
     Optional<Jawaban> detailOpt = jawabanRepository.findById(jawabanId);
     if (detailOpt.isEmpty())
       return false;
     Jawaban jawaban = detailOpt.get();
 
-    // Menggunakan objek dummy karena findById belum diimplementasikan
-    // DetailNilai detail = new DetailNilai();
     jawaban.setId(jawabanId);
-    // Asumsi kita tahu idNilai-nya untuk update header
-    // detail.setIdNilai("ID_HEADER_NYA");
 
-    // 2. Update skor pada DetailNilai
     jawaban.setScore(scoreGiven);
     Jawaban updatedDetail = jawabanRepository.updateScore(jawaban);
 
     if (updatedDetail != null) {
-      // 3. Update Skor Total di Nilai Header
 
       Optional<Nilai> nilaiHeaderOpt = nilaiRepository.findById(updatedDetail.getIdNilai());
       if (nilaiHeaderOpt.isPresent()) {

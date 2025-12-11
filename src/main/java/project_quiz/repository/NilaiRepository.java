@@ -6,15 +6,15 @@ import java.util.Optional;
 
 public interface NilaiRepository {
 
-  Nilai save(Nilai nilai); // Menyimpan header skor baru (setelah kuis selesai)
+  Nilai save(Nilai nilai);
 
   Optional<Nilai> findById(String id);
 
-  Optional<Nilai> findByKuisIdAndSiswaId(String kuisId, String siswaId); // Cek apakah siswa sudah mengerjakan kuis ini
+  Optional<Nilai> findByKuisIdAndSiswaId(String kuisId, String siswaId);
 
-  List<Nilai> findBySiswaId(String siswaId); // Riwayat skor siswa
+  List<Nilai> findBySiswaId(String siswaId);
 
-  List<Nilai> findByKuisId(String kuisId); // Semua skor untuk satu kuis (laporan guru)
+  List<Nilai> findByKuisId(String kuisId);
 
-  Nilai updateSkor(Nilai nilai); // Update skor total (misalnya setelah penilaian esai)
+  Nilai updateSkor(Nilai nilai);
 }
