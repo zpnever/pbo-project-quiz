@@ -9,8 +9,10 @@ import java.util.List;
 import java.util.Optional;
 import java.util.Scanner;
 
+import project_quiz.models.HasilKuis;
 import project_quiz.models.Jawaban;
 import project_quiz.models.Kuis;
+import project_quiz.models.Nilai;
 import project_quiz.models.Soal;
 import project_quiz.models.User;
 import project_quiz.services.AuthService;
@@ -37,7 +39,6 @@ class Menu {
     public void init() {
         System.out.println("===== SELAMAT DATANG =====");
         System.out.println("Creator : Kelompok 2");
-        System.out.println();
 
         showMain();
     }
@@ -50,32 +51,35 @@ class Menu {
     }
 
     private static void showMain() {
-        System.out.println("--- MAIN MENU ---    ");
-        String[] mainMenus = { "Login", "Register", "Exit" };
-        helperMenu(mainMenus);
-        var choice = sc.nextLine();
+        while (true) {
+            System.out.println("\n--- MAIN MENU ---    ");
+            String[] mainMenus = { "Login", "Register", "Exit" };
 
-        switch (choice) {
-            case "1":
-                login();
-                if (loggedInUser != null) {
-                    if ("LECTURER".equalsIgnoreCase(loggedInUser.getRole())) {
-                        showGuruMenu();
-                    } else if ("STUDENT".equalsIgnoreCase(loggedInUser.getRole())) {
-                        showSiswaMenu();
+            helperMenu(mainMenus);
+            var choice = sc.nextLine();
+
+            switch (choice) {
+                case "1":
+                    login();
+                    if (loggedInUser != null) {
+                        if ("LECTURER".equalsIgnoreCase(loggedInUser.getRole())) {
+                            showGuruMenu();
+                        } else if ("STUDENT".equalsIgnoreCase(loggedInUser.getRole())) {
+                            showSiswaMenu();
+                        }
+                        loggedInUser = null;
                     }
-                    loggedInUser = null;
-                }
-                break;
-            case "2":
-                register();
-                break;
-            case "3":
-                System.out.println("Terima kasih! Aplikasi dimatikan.");
-                sc.close();
-                return;
-            default:
-                System.err.println("Opsi tidak valid.");
+                    break;
+                case "2":
+                    register();
+                    break;
+                case "3":
+                    System.out.println("Terima kasih! Aplikasi dimatikan.");
+                    sc.close();
+                    return;
+                default:
+                    System.err.println("Opsi tidak valid.");
+            }
         }
     }
 
@@ -258,32 +262,80 @@ class Menu {
             System.out.println("   ID Kuis: " + k.getId());
         }
 
-        String[] menus = { "Lihat Detail Kuis", "Back" };
+        System.out.println("Menu:");
+        String[] menus = { "Lihat Detail Kuis", "Kembali" };
 
-        helperMenu(menus);
+        while (true) {
+            helperMenu(menus);
+            String choice = sc.nextLine();
+            switch (choice) {
+                case "1":
+                    handleViewDetailKuis(myQuizzes);
+                    break;
+                case "2":
+                    return; // Kembali ke menu guru
+                default:
+                    System.err.println("Opsi tidak valid.");
+            }
+        }
+    }
 
-        String choice = sc.nextLine();
-        switch (choice) {
-            case "1":
-                // handleViewDetailKuis();
-                break;
-            case "2":
-                break;
-            default:
-                System.err.println("Opsi tidak valid.");
+    private static void handleViewDetailKuis(List<Kuis> quizzes) {
+        System.out.print("Masukkan ID Kuis yang ingin dilihat detailnya: ");
+        String kuisId = sc.nextLine();
+
+        // Cari objek Kuis yang sesuai dengan ID
+        Optional<Kuis> kuisOpt = quizzes.stream()
+                .filter(k -> k.getId().equals(kuisId))
+                .findFirst();
+
+        if (kuisOpt.isEmpty()) {
+            System.err.println("ID Kuis tidak ditemukan dalam daftar kuis yang Anda buat.");
+            return;
         }
 
+        Kuis selectedKuis = kuisOpt.get();
+
+        System.out.println("\n--- DETAIL KUIS: " + selectedKuis.getTitle() + " ---");
+        System.out.println("Mata Pelajaran: " + selectedKuis.getSubject());
+        System.out.println("Kategori: " + selectedKuis.getCategory());
+        System.out.println("Periode: " + selectedKuis.getStartTime() + " s/d " + selectedKuis.getEndTime());
+
+        System.out.println("\n--- HASIL SISWA YANG SUDAH MENGERJAKAN ---");
+
+        List<HasilKuis> results = nilaiService.getResultsByKuisId(selectedKuis.getId());
+
+        if (results.isEmpty()) {
+            System.out.println("Belum ada siswa yang mengerjakan kuis ini.");
+            return;
+        }
+
+        // Tampilkan hasil dalam bentuk tabel
+        System.out.printf("| %-30s | %-10s | %-36s |\n", "NAMA SISWA", "SKOR AKHIR", "ID NILAI");
+        System.out.println("---------------------------------------------------------------------------------");
+
+        for (HasilKuis result : results) {
+            System.out.printf("| %-30s | %-10.2f | %-36s |\n",
+                    result.getStudentName(),
+                    result.getScore(),
+                    result.getResultId());
+        }
+        System.out.println("---------------------------------------------------------------------------------");
+
+        System.out.println("\nTekan ENTER untuk kembali.");
+        sc.nextLine();
     }
 
     private static void handleRateEssays() {
         System.out.println("\n--- MENILAI JAWABAN ESAI ---");
+
         List<Kuis> myQuizzes = kuisService.getKuisByCreator(loggedInUser.getId());
         List<Kuis> essayQuizzes = new ArrayList<>();
 
         System.out.println("Pilih Kuis Esai yang akan Dinilai:");
         int count = 1;
         for (Kuis k : myQuizzes) {
-            if (k.getCategory().equalsIgnoreCase("ESSAY")) {
+            if (k.getCategory() != null && k.getCategory().equalsIgnoreCase("ESSAY")) {
                 essayQuizzes.add(k);
                 System.out.println(count++ + ". " + k.getTitle() + " (ID: " + k.getId() + ")");
             }
@@ -310,10 +362,9 @@ class Menu {
             return;
         }
 
-        System.out.println("\n--- SISWA YANG ESAINYA PERLU DINILAI ---");
+        System.out.println("\n--- " + studentsToRate.size() + " SISWA PERLU DINILAI ---");
         for (int i = 0; i < studentsToRate.size(); i++) {
-            System.out.println(
-                    (i + 1) + ". " + studentsToRate.get(i).getName() + " (ID: " + studentsToRate.get(i).getId() + ")");
+            System.out.println((i + 1) + ". " + studentsToRate.get(i).getName());
         }
 
         System.out.print("Pilih nomor Siswa yang akan dinilai: ");
@@ -325,49 +376,67 @@ class Menu {
         }
 
         User student = studentsToRate.get(studentChoice - 1);
-        System.out.println("\n--- MENILAI ESAI SISWA: " + student.getName() + " ---");
 
-        // 2. Dapatkan semua detail jawaban esai untuk siswa ini
-        // Catatan: Anda perlu menambahkan findEssayDetailsBySiswaAndKuis di
-        // Repository/Service
         List<Jawaban> studentEssays = nilaiService.getStudentEssayDetails(student.getId(), selectedKuis.getId());
 
-        for (Jawaban dn : studentEssays) {
-            // Asumsi: kita dapatkan detail soal
-            // Optional<Soal> soalOpt = soalService.findById(dn.getIdSoal());
-            // Soal soal = soalOpt.orElse(new Soal());
+        System.out.println("\n--- MENILAI ESAI SISWA: " + student.getName() + " ---");
 
-            System.out.println("\n[ID Detail: " + dn.getId() + "]");
-            // System.out.println("Soal: " + soal.getQuestion());
+        boolean needsRecalculation = false;
+
+        for (Jawaban dn : studentEssays) {
+
+            Optional<Soal> soalOpt = soalService.findById(dn.getIdSoal());
+            Soal soal = soalOpt.orElse(new Soal());
+
+            System.out.println("------------------------------------");
+            System.out.println("Soal: " + soal.getQuestion());
+            System.out.println("Poin Maksimum: " + soal.getPoints());
+            System.out.println("Kunci Jawaban: " + soal.getAnswer());
             System.out.println("Jawaban Siswa:\n" + dn.getJawabanSiswa());
 
-            // Cek apakah sudah dinilai
-            if (dn.getScore().compareTo(BigDecimal.ZERO) == 0) {
-                System.out.print("Beri Nilai (saat ini 0): ");
+            BigDecimal currentScore = dn.getScore();
+
+            // Cek apakah sudah dinilai (skor > 0)
+            if (currentScore.compareTo(BigDecimal.ZERO) == 0) {
                 try {
-                    BigDecimal score = new BigDecimal(sc.nextLine());
-                    // Panggil Service untuk update
-                    nilaiService.rateEssay(dn.getId(), score);
-                    System.out.println("Nilai " + score + " berhasil disimpan.");
+                    while (true) {
+                        System.out.print("Beri Nilai (Maks " + soal.getPoints() + "): ");
+                        BigDecimal score = new BigDecimal(sc.nextLine());
+
+                        // Validasi skor tidak melebihi poin maksimum
+                        if (score.intValue() > soal.getPoints() || score.compareTo(BigDecimal.ZERO) < 0) {
+                            System.err.println("Nilai harus antara 0 dan " + soal.getPoints() + ".");
+                        } else {
+                            if (nilaiService.rateEssay(dn.getId(), score)) {
+                                System.out.println("Nilai " + score + " berhasil disimpan untuk jawaban ini.");
+                                needsRecalculation = true;
+                                break;
+                            } else {
+                                System.err.println("Gagal menyimpan nilai.");
+                            }
+                        }
+
+                    }
                 } catch (Exception e) {
                     System.err.println("Input nilai tidak valid.");
                 }
             } else {
-                System.out.println("Skor saat ini: " + dn.getScore() + " (Tidak perlu dinilai ulang)");
+                System.out.println("Skor Saat Ini: " + currentScore + " (Sudah dinilai)");
             }
         }
 
-        // 3. Setelah selesai, minta konfirmasi untuk menghitung ulang skor total siswa
-        // (Nilai Header)
-        System.out.print("\nApakah Anda ingin menghitung ulang skor total Siswa ini? (y/n): ");
-        if (sc.nextLine().equalsIgnoreCase("y")) {
-            // Logic untuk menghitung ulang skor total header akan ada di NilaiService
-            // nilaiService.recalculateStudentTotalScore(student.getId(),
-            // selectedKuis.getId());
-            System.out.println("Skor total siswa berhasil diperbarui di header Nilai.");
+        if (needsRecalculation) {
+            System.out.print("\nSemua penilaian selesai. Hitung ulang skor total header siswa (y/n)? ");
+            if (sc.nextLine().equalsIgnoreCase("y")) {
+                nilaiService.recalculateStudentTotalScore(student.getId(), selectedKuis.getId());
+                System.out.println("Skor total siswa (header Nilai) berhasil diperbarui!");
+            }
+        } else {
+            System.out.println("\nTidak ada perubahan skor yang memerlukan perhitungan ulang header.");
         }
     }
 
+    // SISWA
     private static void showSiswaMenu() {
         System.out.println("\n--- MENU SISWA ---");
         System.out.println("Selamat datang, " + loggedInUser.getName() + "!");
@@ -461,19 +530,18 @@ class Menu {
 
             BigDecimal score = BigDecimal.ZERO;
             // Penilaian Otomatis (Hanya untuk Pilihan Ganda/isian singkat)
-            if (kuis.getCategory().equalsIgnoreCase("PILIHAN_GANDA")) {
+            if (kuis.getCategory().equalsIgnoreCase("PG")) {
                 if (studentAnswer.trim().equalsIgnoreCase(soal.getAnswer().trim())) {
                     score = new BigDecimal(soal.getPoints());
                     currentScore += soal.getPoints();
                 }
             } else if (kuis.getCategory().equalsIgnoreCase("ESSAY")) {
-                // Jawaban Esai diberi skor 0 (nol) dulu, menunggu penilaian guru
                 score = BigDecimal.ZERO;
                 System.out.println("(Jawaban esai ini akan dinilai oleh Guru.)");
             }
 
             // Simpan detail jawaban
-            DetailNilai detail = new DetailNilai();
+            Jawaban detail = new Jawaban();
             detail.setIdSoal(soal.getId());
             detail.setIdSiswa(loggedInUser.getId());
             detail.setJawabanSiswa(studentAnswer);
@@ -517,19 +585,10 @@ class Menu {
         System.out.println("\n--- EDIT PROFIL (" + loggedInUser.getName() + ") ---");
 
         System.out.print("Nama Baru (kosongkan jika tidak diubah): ");
-        String newName = scanner.nextLine();
+        String newName = sc.nextLine();
 
         System.out.print("Password Baru (kosongkan jika tidak diubah): ");
-        String newPassword = scanner.nextLine();
-
-        // Panggil AuthService untuk update (asumsi method ini ada di AuthService)
-        // Kita perlu menambahkan method ini di AuthService:
-
-        // Note: Karena saya belum menambahkan method ini di AuthService, saya akan buat
-        // di sini
-        // Anda perlu menambahkan ini di AuthService dan UserRepositoryImpl
-        // User updatedUser = authService.updateProfile(loggedInUser, newName,
-        // newPassword);
+        String newPassword = sc.nextLine();
 
         // Implementasi sederhana:
         User tempUser = new User(loggedInUser.getId(), loggedInUser.getName(), loggedInUser.getEmail(),

@@ -29,9 +29,9 @@ public class JawabanRepositoryImpl implements JawabanRepository {
     try (Connection conn = DB.getConnection();
         PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
-      stmt.setString(1, detail.getIdSoal());
-      stmt.setString(2, detail.getIdSiswa());
-      stmt.setString(3, detail.getIdNilai());
+      stmt.setObject(1, detail.getIdSoal(), Types.OTHER);
+      stmt.setObject(2, detail.getIdSiswa(), Types.OTHER);
+      stmt.setObject(3, detail.getIdNilai(), Types.OTHER);
       stmt.setBigDecimal(4, detail.getScore());
       stmt.setString(5, detail.getJawabanSiswa());
 
@@ -77,7 +77,7 @@ public class JawabanRepositoryImpl implements JawabanRepository {
   public List<String> findUniqueSiswaIdWithUnratedEssays(String kuisId) {
     List<String> siswaIds = new ArrayList<>();
 
-    String SQL = "SELECT DISTINCT n.id_siswa FROM detail_nilai dn " +
+    String SQL = "SELECT DISTINCT n.id_siswa FROM jawaban dn " +
         "JOIN nilai n ON dn.id_nilai = n.\"id\" " +
         "JOIN kuis k ON n.id_kuis = k.\"id\" " +
         "WHERE k.\"id\" = ? AND k.category = 'ESSAY' AND dn.score = 0";
@@ -85,7 +85,7 @@ public class JawabanRepositoryImpl implements JawabanRepository {
     try (Connection conn = DB.getConnection();
         PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
-      stmt.setString(1, kuisId);
+      stmt.setObject(1, kuisId, Types.OTHER);
       try (ResultSet rs = stmt.executeQuery()) {
         while (rs.next()) {
           siswaIds.add(rs.getString("id_siswa"));
@@ -97,7 +97,6 @@ public class JawabanRepositoryImpl implements JawabanRepository {
     return siswaIds;
   }
 
-  // UPDATE Skor Detail (Setelah Guru menilai)
   @Override
   public Jawaban updateScore(Jawaban detail) {
     String SQL = "UPDATE jawaban SET score = ? WHERE \"id\" = ? RETURNING *";
@@ -105,7 +104,7 @@ public class JawabanRepositoryImpl implements JawabanRepository {
         PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
       stmt.setBigDecimal(1, detail.getScore());
-      stmt.setString(2, detail.getId());
+      stmt.setObject(2, detail.getId(), Types.OTHER);
 
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
@@ -120,8 +119,23 @@ public class JawabanRepositoryImpl implements JawabanRepository {
 
   @Override
   public List<Jawaban> findByNilaiId(String nilaiId) {
-    // Implementasi findByNilaiId
-    return new ArrayList<>();
+    List<Jawaban> detailList = new ArrayList<>();
+    String SQL = "SELECT * FROM jawaban WHERE id_nilai = ?";
+
+    try (Connection conn = DB.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(SQL)) {
+
+      stmt.setObject(1, nilaiId, Types.OTHER);
+
+      try (ResultSet rs = stmt.executeQuery()) {
+        while (rs.next()) {
+          detailList.add(mapResultSetToJawaban(rs));
+        }
+      }
+    } catch (SQLException e) {
+      System.err.println("Error saat mencari detail nilai berdasarkan header ID: " + e.getMessage());
+    }
+    return detailList;
   }
 
   @Override
@@ -131,7 +145,7 @@ public class JawabanRepositoryImpl implements JawabanRepository {
     try (Connection conn = DB.getConnection();
         PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
-      stmt.setString(1, id);
+      stmt.setObject(1, id, Types.OTHER);
 
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
@@ -143,5 +157,31 @@ public class JawabanRepositoryImpl implements JawabanRepository {
     }
     return Optional.empty();
 
+  }
+
+  @Override
+  public List<Jawaban> findEssayDetailsBySiswaAndKuis(String siswaId, String kuisId) {
+    List<Jawaban> detailList = new ArrayList<>();
+    String SQL = "SELECT dn.* FROM jawaban dn " +
+        "JOIN nilai n ON dn.id_nilai = n.\"id\" " +
+        "JOIN kuis k ON n.id_kuis = k.\"id\" " +
+        "WHERE dn.id_siswa = ? AND k.\"id\" = ? AND k.category = 'ESSAY' " +
+        "ORDER BY dn.created_at";
+
+    try (Connection conn = DB.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(SQL)) {
+
+      stmt.setObject(1, siswaId, Types.OTHER);
+      stmt.setObject(2, kuisId, Types.OTHER);
+
+      try (ResultSet rs = stmt.executeQuery()) {
+        while (rs.next()) {
+          detailList.add(mapResultSetToJawaban(rs));
+        }
+      }
+    } catch (SQLException e) {
+      System.err.println("Error saat mencari detail esai siswa: " + e.getMessage());
+    }
+    return detailList;
   }
 }

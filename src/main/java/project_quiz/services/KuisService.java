@@ -62,13 +62,14 @@ public class KuisService {
   public Optional<Kuis> getFullKuisDetails(String kuisId) {
     Optional<Kuis> kuisOpt = kuisRepository.findById(kuisId);
     if (kuisOpt.isPresent()) {
-      Kuis kuis = kuisOpt.get();
-      // Panggil SoalService untuk mengambil semua soal terkait kuis ini
-      List<Soal> soalList = soalService.getSoalByKuisId(kuis.getId());
-      // Di sini Anda mungkin perlu memodifikasi model Kuis untuk menampung
-      // List<Soal>,
-      // atau cukup mengembalikan data terpisah di Service. Untuk CLI sederhana, ini
-      // cukup.
+      // Kuis kuis = kuisOpt.get();
+      // // Panggil SoalService untuk mengambil semua soal terkait kuis ini
+      // List<Soal> soalList = soalService.getSoalByKuisId(kuis.getId());
+      // // Di sini Anda mungkin perlu memodifikasi model Kuis untuk menampung
+      // // List<Soal>,
+      // // atau cukup mengembalikan data terpisah di Service. Untuk CLI sederhana,
+      // ini
+      // // cukup.
       return kuisOpt;
     }
     return Optional.empty();

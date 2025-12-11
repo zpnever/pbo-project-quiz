@@ -14,6 +14,7 @@ project_quiz\services\NilaiService.class
 project_quiz\repository\UserRepository.class
 project_quiz\models\Soal.class
 project_quiz\services\UserService.class
+project_quiz\models\HasilKuis.class
 project_quiz\repository\KuisRepositoryImpl.class
 project_quiz\repository\NilaiRepository.class
 project_quiz\repository\KuisRepository.class

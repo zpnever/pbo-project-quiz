@@ -4,6 +4,7 @@ import project_quiz.models.Soal;
 import project_quiz.repository.SoalRepository;
 import project_quiz.repository.SoalRepositoryImpl;
 import java.util.List;
+import java.util.Optional;
 
 public class SoalService {
 
@@ -40,5 +41,9 @@ public class SoalService {
 
   public List<Soal> getSoalByKuisId(String kuisId) {
     return soalRepository.findByKuisId(kuisId);
+  }
+
+  public Optional<Soal> findById(String id) {
+    return soalRepository.findById(id);
   }
 }

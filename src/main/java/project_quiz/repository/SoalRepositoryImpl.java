@@ -15,10 +15,9 @@ public class SoalRepositoryImpl implements SoalRepository {
     soal.setId(rs.getString("id"));
     soal.setIdKuis(rs.getString("id_kuis"));
     soal.setQuestion(rs.getString("question"));
-    soal.setPoints(rs.getInt("points"));
+    soal.setPoints(rs.getInt("point"));
     soal.setAnswer(rs.getString("answer"));
 
-    // Penanganan Array dari DB (TEXT[])
     Array sqlArray = rs.getArray("butir_pilihan");
     if (sqlArray != null) {
       String[] stringArray = (String[]) sqlArray.getArray();
@@ -67,13 +66,17 @@ public class SoalRepositoryImpl implements SoalRepository {
     String SQL = "SELECT * FROM soal WHERE id_kuis = ?";
     try (Connection conn = DB.getConnection();
         PreparedStatement stmt = conn.prepareStatement(SQL)) {
+      System.out.println("[DEBUG REPO] Mencari soal untuk Kuis ID: " + kuisId);
 
-      stmt.setString(1, kuisId);
+      stmt.setObject(1, kuisId, Types.OTHER);
 
       try (ResultSet rs = stmt.executeQuery()) {
+        int count = 0;
         while (rs.next()) {
           soalList.add(mapResultSetToSoal(rs));
+          count++;
         }
+        System.out.println("[DEBUG REPO] Ditemukan " + count + " soal.");
       }
     } catch (SQLException e) {
       System.err.println("Error saat mencari soal berdasarkan kuis ID: " + e.getMessage());
@@ -83,7 +86,20 @@ public class SoalRepositoryImpl implements SoalRepository {
 
   @Override
   public Optional<Soal> findById(String id) {
-    // Implementasi findById
+    String SQL = "SELECT * FROM soal WHERE \"id\" = ?";
+    try (Connection conn = DB.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(SQL)) {
+
+      stmt.setObject(1, id, Types.OTHER);
+
+      try (ResultSet rs = stmt.executeQuery()) {
+        if (rs.next()) {
+          return Optional.of(mapResultSetToSoal(rs));
+        }
+      }
+    } catch (SQLException e) {
+      System.err.println("Error saat mencari soal by ID: " + e.getMessage());
+    }
     return Optional.empty();
   }
 

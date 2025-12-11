@@ -12,7 +12,7 @@ public class NilaiRepositoryImpl implements NilaiRepository {
 
   private Nilai mapResultSetToNilai(ResultSet rs) throws SQLException {
     Nilai nilai = new Nilai();
-    nilai.setId(rs.getString("ID"));
+    nilai.setId(rs.getString("id"));
     nilai.setIdKuis(rs.getString("id_kuis"));
     nilai.setIdSiswa(rs.getString("id_siswa"));
     nilai.setSkor(rs.getBigDecimal("skor"));
@@ -27,8 +27,8 @@ public class NilaiRepositoryImpl implements NilaiRepository {
     try (Connection conn = DB.getConnection();
         PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
-      stmt.setString(1, nilai.getIdKuis());
-      stmt.setString(2, nilai.getIdSiswa());
+      stmt.setObject(1, nilai.getIdKuis(), Types.OTHER);
+      stmt.setObject(2, nilai.getIdSiswa(), Types.OTHER);
       stmt.setBigDecimal(3, nilai.getSkor() != null ? nilai.getSkor() : BigDecimal.ZERO);
 
       try (ResultSet rs = stmt.executeQuery()) {
@@ -52,7 +52,7 @@ public class NilaiRepositoryImpl implements NilaiRepository {
     try (Connection conn = DB.getConnection();
         PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
-      stmt.setString(1, siswaId);
+      stmt.setObject(1, siswaId, Types.OTHER);
       try (ResultSet rs = stmt.executeQuery()) {
         while (rs.next()) {
           nilaiList.add(mapResultSetToNilai(rs));
@@ -71,7 +71,7 @@ public class NilaiRepositoryImpl implements NilaiRepository {
         PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
       stmt.setBigDecimal(1, nilai.getSkor());
-      stmt.setString(2, nilai.getId());
+      stmt.setObject(2, nilai.getId(), Types.OTHER);
 
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
@@ -90,7 +90,7 @@ public class NilaiRepositoryImpl implements NilaiRepository {
     try (Connection conn = DB.getConnection();
         PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
-      stmt.setString(1, id);
+      stmt.setObject(1, id, Types.OTHER);
 
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
@@ -109,8 +109,8 @@ public class NilaiRepositoryImpl implements NilaiRepository {
     try (Connection conn = DB.getConnection();
         PreparedStatement stmt = conn.prepareStatement(SQL)) {
 
-      stmt.setString(1, kuisId);
-      stmt.setString(2, siswaId);
+      stmt.setObject(1, kuisId, Types.OTHER);
+      stmt.setObject(2, siswaId, Types.OTHER);
 
       try (ResultSet rs = stmt.executeQuery()) {
         if (rs.next()) {
@@ -125,7 +125,22 @@ public class NilaiRepositoryImpl implements NilaiRepository {
 
   @Override
   public List<Nilai> findByKuisId(String kuisId) {
-    // Implementasi findByKuisId
-    return new ArrayList<>();
+    List<Nilai> nilaiList = new ArrayList<>();
+    String SQL = "SELECT * FROM nilai WHERE id_kuis = ?";
+
+    try (Connection conn = DB.getConnection();
+        PreparedStatement stmt = conn.prepareStatement(SQL)) {
+
+      stmt.setObject(1, kuisId, Types.OTHER);
+
+      try (ResultSet rs = stmt.executeQuery()) {
+        while (rs.next()) {
+          nilaiList.add(mapResultSetToNilai(rs));
+        }
+      }
+    } catch (SQLException e) {
+      System.err.println("Error saat mencari nilai berdasarkan kuis ID: " + e.getMessage());
+    }
+    return nilaiList;
   }
 }

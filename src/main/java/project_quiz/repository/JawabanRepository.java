@@ -14,7 +14,7 @@ public interface JawabanRepository {
 
   List<String> findUniqueSiswaIdWithUnratedEssays(String kuisId);
 
-  // List<Jawaban> findEssayDetailsBySiswaAndKuis(String siswaId, String kuisId);
+  List<Jawaban> findEssayDetailsBySiswaAndKuis(String siswaId, String kuisId);
 
   // List<Jawaban> findUnratedEssaysByKuisId(String kuisId); // Untuk Guru menilai
 

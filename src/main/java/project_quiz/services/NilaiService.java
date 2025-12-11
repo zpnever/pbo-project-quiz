@@ -1,5 +1,6 @@
 package project_quiz.services;
 
+import project_quiz.models.HasilKuis;
 import project_quiz.models.Jawaban;
 import project_quiz.models.Nilai;
 import project_quiz.models.User;
@@ -85,8 +86,10 @@ public class NilaiService {
   }
 
   public List<Jawaban> getStudentEssayDetails(String siswaId, String kuisId) {
-    List<Jawaban> allDetails = new ArrayList<>();
-    return allDetails;
+    System.out.println("[DEBUG SERVICE] Mencari esai untuk Siswa ID: " + siswaId + " Kuis ID: " + kuisId);
+
+    // Ganti list kosong dengan panggilan ke Repository
+    return jawabanRepository.findEssayDetailsBySiswaAndKuis(siswaId, kuisId);
   }
 
   // Menilai satu jawaban esai
@@ -124,5 +127,58 @@ public class NilaiService {
       return true;
     }
     return false;
+  }
+
+  public Nilai recalculateStudentTotalScore(String siswaId, String kuisId) {
+    Optional<Nilai> headerOpt = nilaiRepository.findByKuisIdAndSiswaId(kuisId, siswaId);
+
+    if (headerOpt.isEmpty()) {
+      System.err.println("Gagal menghitung ulang: Nilai header tidak ditemukan.");
+      return null;
+    }
+
+    Nilai header = headerOpt.get();
+    String nilaiHeaderId = header.getId();
+
+    List<Jawaban> allDetails = jawabanRepository.findByNilaiId(nilaiHeaderId);
+
+    if (allDetails.isEmpty()) {
+      System.err.println("Gagal menghitung ulang: Tidak ada detail nilai ditemukan.");
+      return null;
+    }
+
+    BigDecimal newTotalScore = BigDecimal.ZERO;
+    for (Jawaban detail : allDetails) {
+      newTotalScore = newTotalScore.add(detail.getScore());
+    }
+
+    header.setSkor(newTotalScore);
+    Nilai updatedHeader = nilaiRepository.updateSkor(header);
+
+    if (updatedHeader != null) {
+      System.out.println("Skor total baru: " + newTotalScore + " berhasil disimpan untuk siswa " + siswaId + ".");
+      return updatedHeader;
+    } else {
+      System.err.println("Gagal menyimpan update skor total ke database.");
+      return null;
+    }
+  }
+
+  public List<HasilKuis> getResultsByKuisId(String kuisId) {
+    List<Nilai> nilaiList = nilaiRepository.findByKuisId(kuisId);
+    List<HasilKuis> results = new ArrayList<>();
+
+    for (Nilai nilai : nilaiList) {
+      Optional<User> userOpt = userRepository.findById(nilai.getIdSiswa());
+
+      String studentName = userOpt.map(User::getName).orElse("N/A (Siswa Dihapus)");
+
+      HasilKuis result = new HasilKuis(
+          studentName,
+          nilai.getSkor(),
+          nilai.getId());
+      results.add(result);
+    }
+    return results;
   }
 }
