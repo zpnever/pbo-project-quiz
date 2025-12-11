@@ -4,11 +4,10 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.SQLException;
 
-import project_quiz.DB;
-import project_quiz.User;
+import project_quiz.config.DB;
+import project_quiz.models.User;
 
 public class UserService {
-  // --- C R E A T E (I N S E R T) ---
   public boolean createUser(String name, String email, String password) {
     String SQL = "INSERT INTO \"user\"(name, email, password) VALUES(?, ?, ?)";
 
@@ -36,23 +35,17 @@ public class UserService {
     return false;
   }
 
-  // --- R E A D (S E L E C T B Y I D) ---
   public void getUserById(String id) {
     String SQL = "SELECT * FROM \"user\" WHERE id='?'";
 
     System.out.println("\n--- Detail Pengguna Berdasarkan ID ---");
 
-    // Deklarasikan ResultSet di luar try-with-resources agar bisa diakses jika ada
-    // masalah
-    // Namun, kita akan tetap menggunakan try-with-resources untuk efisiensi
     try (Connection conn = DB.getConnection();
         PreparedStatement pstmt = conn.prepareStatement(SQL)) {
 
       if (conn == null)
         return;
 
-      // 2. Pasang nilai input ke placeholder (PENTING!)
-      // Karena id adalah String representasi UUID, kita gunakan setString.
       pstmt.setString(1, id);
 
       try (java.sql.ResultSet rs = pstmt.executeQuery()) {
@@ -62,7 +55,6 @@ public class UserService {
           String name = rs.getString("name");
           String email = rs.getString("email");
 
-          // Cetak ID sebagai String (%s)
           System.out.printf("ID: %-36s | Nama: %-20s | Email: %-30s",
               retrievedId, name, email);
         } else {
@@ -76,7 +68,6 @@ public class UserService {
     }
   }
 
-  // --- U S E R L O G I N ---
   public User userLogin(String email, String password) {
     String SQL = "SELECT * FROM \"user\" WHERE email = ? AND password = ?";
 
