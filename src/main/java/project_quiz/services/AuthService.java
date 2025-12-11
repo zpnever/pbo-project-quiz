@@ -45,7 +45,7 @@ public class AuthService {
    * @param name     Nama user.
    * @param email    Email user.
    * @param password Password user.
-   * @param role     Peran user (misal: "STUDENT" atau "GURU").
+   * @param role     Peran user (misal: "STUDENT" atau "LECTURER").
    * @return User object jika register berhasil, null jika gagal.
    */
   public User register(String name, String email, String password, String role) {
@@ -80,5 +80,4 @@ public class AuthService {
     }
   }
 
-  // Metode lain yang terkait otentikasi, misal changePassword, dll.
 }

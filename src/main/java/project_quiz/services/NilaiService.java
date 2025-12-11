@@ -1,0 +1,128 @@
+package project_quiz.services;
+
+import project_quiz.models.Jawaban;
+import project_quiz.models.Nilai;
+import project_quiz.models.User;
+import project_quiz.repository.JawabanRepository;
+import project_quiz.repository.JawabanRepositoryImpl;
+import project_quiz.repository.NilaiRepository;
+import project_quiz.repository.NilaiRepositoryImpl;
+import project_quiz.repository.UserRepository;
+import project_quiz.repository.UserRepositoryImpl;
+
+import java.math.BigDecimal;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Optional;
+
+public class NilaiService {
+
+  private final NilaiRepository nilaiRepository;
+  private final JawabanRepository jawabanRepository;
+  private final UserRepository userRepository;
+  private final KuisService kuisService; // Diperlukan untuk mendapatkan detail Kuis
+  private final SoalService soalService; // Diperlukan untuk mendapatkan detail Soal
+
+  public NilaiService() {
+    this.userRepository = new UserRepositoryImpl();
+    this.nilaiRepository = new NilaiRepositoryImpl();
+    this.jawabanRepository = new JawabanRepositoryImpl();
+    this.kuisService = new KuisService();
+    this.soalService = new SoalService();
+  }
+
+  // --- Fungsionalitas Siswa ---
+
+  public boolean hasStudentCompletedQuiz(String kuisId, String siswaId) {
+    return nilaiRepository.findByKuisIdAndSiswaId(kuisId, siswaId).isPresent();
+  }
+
+  public List<Nilai> getScoreHistoryBySiswaId(String siswaId) {
+    return nilaiRepository.findBySiswaId(siswaId);
+  }
+
+  public Nilai finalizeNilai(String kuisId, String siswaId, List<Jawaban> submittedJawabans) {
+
+    BigDecimal totalScore = BigDecimal.ZERO;
+    for (Jawaban jawaban : submittedJawabans) {
+      totalScore = totalScore.add(jawaban.getScore());
+    }
+
+    Nilai nilaiHeader = new Nilai();
+    nilaiHeader.setIdKuis(kuisId);
+    nilaiHeader.setIdSiswa(siswaId);
+    nilaiHeader.setSkor(totalScore);
+
+    Nilai savedHeader = nilaiRepository.save(nilaiHeader);
+
+    if (savedHeader != null) {
+      for (Jawaban jawaban : submittedJawabans) {
+        jawaban.setIdNilai(savedHeader.getId());
+        jawabanRepository.save(jawaban);
+      }
+      return savedHeader;
+    }
+    return null;
+  }
+
+  // --- Fungsionalitas Guru ---
+
+  // Mendapatkan daftar jawaban esai yang perlu dinilai untuk kuis tertentu
+  // public List<Jawaban> getUnratedEssaysByKuisId(String kuisId) {
+  // return
+  // jawabanRepository.findUnratedEssaysByKuisId(kuisId);
+  // }
+
+  public List<User> getStudentsWithUnratedEssays(String kuisId) {
+    List<String> siswaIds = jawabanRepository.findUniqueSiswaIdWithUnratedEssays(kuisId);
+    List<User> students = new ArrayList<>();
+
+    for (String siswaId : siswaIds) {
+      // Asumsi UserRepository memiliki findById
+      userRepository.findById(siswaId).ifPresent(students::add);
+    }
+    return students;
+  }
+
+  public List<Jawaban> getStudentEssayDetails(String siswaId, String kuisId) {
+    List<Jawaban> allDetails = new ArrayList<>();
+    return allDetails;
+  }
+
+  // Menilai satu jawaban esai
+  public boolean rateEssay(String jawabanId, BigDecimal scoreGiven) {
+    // 1. Ambil detail nilai yang akan dinilai (asumsi ada method findById di
+    // detailNilaiRepository)
+    Optional<Jawaban> detailOpt = jawabanRepository.findById(jawabanId);
+    if (detailOpt.isEmpty())
+      return false;
+    Jawaban jawaban = detailOpt.get();
+
+    // Menggunakan objek dummy karena findById belum diimplementasikan
+    // DetailNilai detail = new DetailNilai();
+    jawaban.setId(jawabanId);
+    // Asumsi kita tahu idNilai-nya untuk update header
+    // detail.setIdNilai("ID_HEADER_NYA");
+
+    // 2. Update skor pada DetailNilai
+    jawaban.setScore(scoreGiven);
+    Jawaban updatedDetail = jawabanRepository.updateScore(jawaban);
+
+    if (updatedDetail != null) {
+      // 3. Update Skor Total di Nilai Header
+
+      Optional<Nilai> nilaiHeaderOpt = nilaiRepository.findById(updatedDetail.getIdNilai());
+      if (nilaiHeaderOpt.isPresent()) {
+        Nilai header = nilaiHeaderOpt.get();
+        List<Jawaban> allDetails = jawabanRepository.findByNilaiId(header.getId());
+        BigDecimal newTotalScore = allDetails.stream().map(Jawaban::getScore).reduce(BigDecimal.ZERO,
+            BigDecimal::add);
+        header.setSkor(newTotalScore);
+        nilaiRepository.updateSkor(header);
+      }
+      System.out.println("Skor detail berhasil diupdate. (Perlu implementasi update skor total header)");
+      return true;
+    }
+    return false;
+  }
+}
