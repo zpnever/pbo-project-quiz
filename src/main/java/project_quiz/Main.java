@@ -15,6 +15,7 @@ import project_quiz.models.Kuis;
 import project_quiz.models.Nilai;
 import project_quiz.models.Soal;
 import project_quiz.models.User;
+import project_quiz.services.AiService;
 import project_quiz.services.AuthService;
 import project_quiz.services.KuisService;
 import project_quiz.services.NilaiService;
@@ -33,6 +34,7 @@ class Menu {
     private static final KuisService kuisService = new KuisService();
     private static final SoalService soalService = new SoalService();
     private static final NilaiService nilaiService = new NilaiService();
+    private static final AiService aiService = new AiService();
 
     private static User loggedInUser = null;
 
@@ -144,10 +146,21 @@ class Menu {
                 case "4":
                     System.out.println("Guru " + loggedInUser.getName() + " berhasil logout.");
                     return;
+                case "5":
+                    handleAi();
+                    break;
                 default:
                     System.err.println("Opsi tidak valid.");
             }
         }
+    }
+
+    private static void handleAi() {
+        System.out.println("\n--- BUAT KUIS AI (EXPERIMENTAL) ---");
+        System.out.print("Masukkan prompt: ");
+        String p = sc.nextLine();
+
+        aiService.generatedSoal(p);
     }
 
     private static void handleCreateKuis() {
