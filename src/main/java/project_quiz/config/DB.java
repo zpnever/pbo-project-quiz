@@ -11,7 +11,6 @@ public class DB {
     Connection conn = null;
     try {
       conn = DriverManager.getConnection(URL);
-      System.out.println("Koneksi berhasil!");
     } catch (SQLException e) {
       System.err.println("Database connection failed!");
       e.printStackTrace();
